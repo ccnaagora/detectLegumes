@@ -1,0 +1,28 @@
+detection temps reel avec affichage position et centre de gravité
+
+dependances:
+    tensorflow
+    opencv-python
+    pandas
+    matploblib
+    tensorflow-gpu ( si gpu)
+
+1 ] Collecte des images et annotation
+créer un dossier images
+photos des légumes carottes et patates
+    avec une appli qui prend les photos
+annoter avec labelimg ( ou autre ) format Pascal, VOC ou TFRecord
+
+2 ] préparation du dataset
+
+3 ] apprentissage:
+
+entrainer un modele sur le dataset d'image:
+modele : yolov8n.pt
+images train et test réalisées et labelisées au format yolo
+entrainé avec ultralytics yolo.
+
+le resultat sont 2 repertoire train et test contenant des fichiers resultats de l'entrainement.
+
+4 ] test sur une camera
+

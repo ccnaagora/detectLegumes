@@ -1,0 +1,5 @@
+classes = 2
+train = yolo/train_img.txt
+valid = yolo/test.txt
+names = yolo/obj.names
+backup = yolo/backup/

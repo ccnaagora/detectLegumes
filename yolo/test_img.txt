@@ -1,0 +1,4 @@
+../mondataset/test/images/1111_20251219_153503.jpg
+../mondataset/test/images/1111_20251219_153528.jpg
+../mondataset/test/images/1111_20251219_153602.jpg
+../mondataset/test/images/1111_20251219_153702.jpg

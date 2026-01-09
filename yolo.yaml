@@ -1,0 +1,12 @@
+# Chemin vers les dossiers (relatifs ou absolus)
+train: ./mondataset/trainpiece
+val: ./mondataset/valpiece
+
+# Nombre de classes
+nc: 2
+
+# Noms des classes (dans l'ordre des IDs)
+names: ['rouge' , 'vert']
+
+
+#python train.py --data data.yaml --cfg models/yolov5s.yaml --weights yolov5s.pt --img 640 --batch 16 --epochs 10

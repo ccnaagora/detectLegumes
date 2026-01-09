@@ -1,0 +1,4 @@
+../mondataset/train/images/1111_20251219_153508.jpg
+../mondataset/train/images/1111_20251219_153513.jpg
+../mondataset/train/images/1111_20251219_153521.jpg
+../mondataset/train/images/1111_20251219_153532.jpg
