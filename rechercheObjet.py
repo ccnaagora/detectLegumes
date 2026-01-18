@@ -63,19 +63,22 @@ def getcontour(box , image , iter=5 , delta=0):
     cv2.grabCut(image, mask, rect, bgd_model, fgd_model, iter, cv2.GC_INIT_WITH_RECT)
     # cv2.rectangle(image, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)  # Rectangle vert
     mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    #pas utilie
     kernel = np.ones((3, 3), np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)  # Élimine les petits objets
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Ferme les petits trous
     # Trouver les contours
-    # contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # meilleur compromi
+    #contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # meilleur compromis
     if contours:
-        dessinerDirection2(image, commun.seuilsRougeH, max(contours, key=cv2.contourArea))
         largest_contour = max(contours, key=cv2.contourArea)
-        cv2.drawContours(image, largest_contour, -1, (255, 0, 0), 2)
+        #retourne les coordonnées du vecteur 'direction de l'allongement'
+        x,y,z,w = getVecteurDirection(image, commun.seuilsRougeH, largest_contour)
+        cv2.drawContours(image, largest_contour, -1, (0, 255, 0), 2)
+        cv2.line(image, (x, y), (z, w), (255, 0, 0), 2)
 
 
-#model = YOLO("yolov8n.pt")
+    #model = YOLO("yolov8n.pt")
 
 # Détecter des objets sur une nouvelle image
 from ultralytics import YOLO
@@ -83,16 +86,16 @@ import cv2
 
 # Charger le modèle entraîné
 model = YOLO("runs/detect/train/weights/best.pt")  # Remplacez par le chemin vers votre modèle entraîné
-
+paire=0
 
 # Ouvrir la caméra (0 pour la webcam par défaut)
-#cap = cv2.VideoCapture(commun.url935 , cv2.CAP_FFMPEG )
-cap = cv2.VideoCapture(commun.url5020)
+cap = cv2.VideoCapture(commun.url935 , cv2.CAP_FFMPEG )
+#cap = cv2.VideoCapture(commun.url5020)
 #desactive le buffer
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Désactive le buffer
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-cap.set(cv2.CAP_PROP_FPS, 1)
+cap.set(cv2.CAP_PROP_FPS, 10)
 old=0
 while True:
     # Lire une frame depuis la caméra
@@ -119,6 +122,7 @@ while True:
     threads = []
     for result in results:
         for box in result.boxes:
+            #1 thread par box
             t = Thread(target = getcontour , args=(box,frame,2,0))
             threads.append(t)
             t.start()
@@ -129,6 +133,7 @@ while True:
             #c = returnCentre(results)
             #print(c)
             #print(f"deltat : {(fin-debut):.4f} secondes")
+    print('nb thread={}'.format(len(threads)))
     for t in threads:
         t.join()
     cv2.imshow("test", frame)

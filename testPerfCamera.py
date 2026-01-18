@@ -24,7 +24,7 @@ def perdreTemps(duree , a):
 #pour dcs 935l
 #cap = cv2.VideoCapture(commun.url935) # 0 pour la caméra par défaut
 #pour dcs 5020l
-cap = cv2.VideoCapture(commun.url5020)
+cap = cv2.VideoCapture(commun.url935 )
 #desactive le buffer
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Désactive le buffer
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
@@ -36,8 +36,9 @@ cap.set(cv2.CAP_PROP_FPS, 1)
 while True:
     ret, frame = cap.read()
     if not ret:
+        print('pas image')
         break
-    t = Thread(target=perdreTemps , args=(0.05 , 0))
+    t = Thread(target=perdreTemps , args=(0.002 , 0))
     t.start()
     t.join()
     #time.sleep(0.050)
