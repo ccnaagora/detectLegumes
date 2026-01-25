@@ -104,15 +104,17 @@ plt.show()
 import cv2
 import scipy
 #pour dcs 935l
-#cap = cv2.VideoCapture(commun.url935) # 0 pour la caméra par défaut
+cap = cv2.VideoCapture(commun.url935_2) # 0 pour la caméra par défaut
 #pour dcs 5020l
-cap = cv2.VideoCapture(commun.url5020)
+#cap = cv2.VideoCapture('172.21.119.130')
+
 
 cv2.namedWindow('Classification en temps réel', cv2.WINDOW_NORMAL)
 
 while True:
     ret, frame = cap.read()
     if not ret:
+        print('pas d\'image')
         break
     #resize avec padding : fonctionne moins bien
     #frame = resize_with_pad(frame, target_size=(224, 224))
@@ -125,20 +127,22 @@ while True:
     #cv2.resizeWindow('Classification en temps réel', 640, 480)
     cv2.imshow('Classification en temps réel', frame)
     key = cv2.waitKey(5) & 0xFF
-    type_image = 'vert'
+    type_image = 'patate'
     if key == ord('q'):
         break
     if key == ord('t'):
         # Sauvegarde l'image dans le bon dossier
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"img/train_{type_image}{timestamp}.jpg"
-        enr = resize(frame, target_size=(224, 224))
+        filename = f"img/train/{type_image}{timestamp}.jpg"
+        #enr = resize(frame, target_size=(224, 224))
+        enr = resize(frame)
         cv2.imwrite(filename, enr)
     if key == ord('v'):
         # Sauvegarde l'image dans le bon dossier
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"img/val_{type_image}{timestamp}.jpg"
-        enr = resize(frame, target_size=(224, 224))
+        filename = f"img/val/{type_image}{timestamp}.jpg"
+        #enr = resize(frame, target_size=(224, 224))
+        enr = resize(frame)
         cv2.imwrite(filename, enr)
 
 cap.release()

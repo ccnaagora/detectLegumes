@@ -1,6 +1,6 @@
 # Chemin vers les dossiers (relatifs ou absolus)
-train: ./mondataset/train
-val: ./mondataset/val
+train: ./mondataset/trainlegumes
+val: ./mondataset/vallegumes
 
 # Nombre de classes
 nc: 2

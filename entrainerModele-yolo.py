@@ -19,7 +19,7 @@ model = YOLO("yolov8n.pt")
 
 # Entraîner le modèle sur votre dataset
 results = model.train(
-    data="yolo.yaml",  # Fichier de configuration du dataset
+    data="yolo-legumes.yaml",  # Fichier de configuration du dataset
     epochs=20,  # Nombre d'époques
     imgsz=640,   # Taille des images
     batch=16,    # Taille du batch

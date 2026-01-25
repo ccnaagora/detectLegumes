@@ -1,3 +1,4 @@
+import torch
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -58,7 +59,8 @@ def getcontour(box , image , iter=5 , delta=0):
     mask = np.zeros(image.shape[:2],np.uint8)  # les deux premiers : x et y et ignore le canal de couleur ( = 640,380,3 par exemple)
     bgd_model = np.zeros((1, 65), np.float64)
     fgd_model = np.zeros((1, 65), np.float64)
-
+    #deplacer les fonctionsopencv sur le gpu. ne fonctionne que si opencv est compilé avec l'option cuda
+    #cv2.cuda.setDevice(0)
     # Appliquer GrabCut
     cv2.grabCut(image, mask, rect, bgd_model, fgd_model, iter, cv2.GC_INIT_WITH_RECT)
     # cv2.rectangle(image, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)  # Rectangle vert
@@ -68,7 +70,6 @@ def getcontour(box , image , iter=5 , delta=0):
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)  # Élimine les petits objets
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Ferme les petits trous
     # Trouver les contours
-    #contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # meilleur compromis
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
@@ -84,23 +85,34 @@ def getcontour(box , image , iter=5 , delta=0):
 from ultralytics import YOLO
 import cv2
 
+#recherche de cuda pour activer le gpu1 ou 00878
+# Vérifier si CUDA (NVIDIA) est bien disponible
+print(torch.cuda.get_device_name(0))
+if torch.cuda.is_available():
+    print(f"GPU NVIDIA détecté : {torch.cuda.get_device_name(0)}")
+    my_device = 0  # 0 est généralement l'index du GPU NVIDIA
+else:
+    print("GPU NVIDIA non détecté, utilisation du CPU")
+    my_device = 'cpu'
 # Charger le modèle entraîné
-model = YOLO("runs/detect/train/weights/best.pt")  # Remplacez par le chemin vers votre modèle entraîné
+model = YOLO("runs-legumes/detect/train/weights/best.pt")  # Remplacez par le chemin vers votre modèle entraîné
+model.to(my_device)
 paire=0
 
 # Ouvrir la caméra (0 pour la webcam par défaut)
-cap = cv2.VideoCapture(commun.url935 , cv2.CAP_FFMPEG )
+cap = cv2.VideoCapture(commun.url935_2 , cv2.CAP_FFMPEG )
 #cap = cv2.VideoCapture(commun.url5020)
 #desactive le buffer
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Désactive le buffer
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 cap.set(cv2.CAP_PROP_FPS, 10)
+cap.set(0 , cv2.CAP_DSHOW)
 old=0
 while True:
     # Lire une frame depuis la caméra
     start = time.perf_counter()
-    print(f"Thread grabcut: {start - old:.3f}s")
+    #print(f"Thread grabcut: {start - old:.3f}s")
     ret, frame = cap.read()
     old=start
     if not ret:
@@ -110,7 +122,7 @@ while True:
     #frame = cv2.convertScaleAbs(frame, alpha=1.5, beta=15)
     #diminue les ombres
     #frame = adjust_gamma(frame, gamma=1.5)
-    results = model(frame, imgsz=640 , conf=0.1)  # Seuil de confiance à 0.5
+    results = model(frame, imgsz=640 , conf=0.2)  # Seuil de confiance à 0.5
 
     # Effectuer la détection
     from fonction import *
@@ -121,8 +133,10 @@ while True:
     #cv2.imshow("Détection de carottes et pommes de terre", annotated_frame)
     threads = []
     for result in results:
+        print('nb box={}'.format(len(result.boxes)))
         for box in result.boxes:
             #1 thread par box
+            print('label:{}'.format(box.cls))
             t = Thread(target = getcontour , args=(box,frame,2,0))
             threads.append(t)
             t.start()

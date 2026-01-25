@@ -12,7 +12,7 @@ else:
 # Charger le modèle sur le GPU spécifié
 #model = YOLO("yolov8n.pt")
 model = YOLO("runs/detect/train/weights/best.pt")
-model.to(my_device)
-print(model.info())
+#model.to(my_device)
+#print(model.info())
 
 # Lancer la détection

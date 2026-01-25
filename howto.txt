@@ -11,7 +11,7 @@ dependances:
 créer un dossier images
 photos des légumes carottes et patates
     avec une appli qui prend les photos
-annoter avec labelimg ( ou autre ) format Pascal, VOC ou TFRecord
+annoter avec labelimg ( ou autre ) format yolo  Pascal, VOC ou TFRecord
 
 2 ] préparation du dataset
 

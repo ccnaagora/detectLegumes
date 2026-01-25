@@ -1,5 +1,6 @@
 #url pour différentes caméras
 url935 = 'rtsp://admin:@192.168.1.17/play1.sdp'
+url935_2 = 'rtsp://admin:@192.168.1.39/play1.sdp'
 url935mjpg = 'rtsp://admin:@192.168.1.17/play2.sdp'
 #pour cds 5020L
 url5020 = 'http://admin:@192.168.0.20/video.cgi'
