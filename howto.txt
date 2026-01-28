@@ -22,7 +22,7 @@ modele : yolov8n.pt
 images train et test réalisées et labelisées au format yolo
 entrainé avec ultralytics yolo.
 
-le resultat sont 2 repertoires train et test contenant des fichiers resultats de l'entrainement.
+le resultat sont 2 repertoires train et val contenant des fichiers resultats de l'entrainement.
 
 4 ] test sur une camera
 

@@ -1,10 +1,9 @@
 import torch
-from ultralytics import YOLO
-import cv2
 import numpy as np
 import time
 from threading import Thread
-
+from ultralytics import YOLO
+import cv2
 import commun
 
 
@@ -13,7 +12,6 @@ def adjust_gamma(image, gamma=1.5):
     # Construction d'une table de correspondance pour la correction gamma
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-
     # Application de la table de correspondance
     return cv2.LUT(image, table)
 def dessinerPointCentre(results , image):
@@ -46,15 +44,80 @@ def returnCentre(results )  :
             print('x={}'.format(centres))
             i=i+1
     return centres
+########################################################
+def getVecteurDirection(image , seuils , contour):
+    # 3. Calculer le centroïde
+    M = cv2.moments(contour)
+    #print(M)
+    if M["m00"] != 0:
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        # 4. Préparer les points du contour pour PCACompute
+        points = contour[:, 0, :]  # Récupérer les points (format initial : int)
+        points = points.astype(np.float32)  # Convertir en float32
+        # 5. Calculer la PCA
+        mean, eigenvectors = cv2.PCACompute(points, mean=None)
+        # 6. Calculer l'angle d'orientation
+        angle = np.arctan2(eigenvectors[0, 1], eigenvectors[0, 0])  # Angle en radians
+        angle_deg = np.degrees(angle)  # Convertir en degrés
+        # 7. Dessiner l'axe principal
+        axis_length = 50
+        x2 = int(cX + axis_length * eigenvectors[0, 0])
+        y2 = int(cY + axis_length * eigenvectors[0, 1])
+        return (cX,cY,x2,y2)
+
+##########################################################
+
+########################################
+def afficheContourDirection2(box , image , iter=5 , delta=0):
+    #print('confiance: {}'.format(box.conf))
+    x1, y1, x2, y2 = map(int, box.xyxy[0])
+    w=x2-x1
+    h=y2-y1
+    rect = (max(0, x1 - delta), max(0, y1 - delta), x2 - x1 + delta, y2 - y1 + delta)
+    # cv2.rectangle(image, rect, (0, 255, 0), 2)  # Rectangle vert
+    roi = image[x1:x1+w ,y1:y1+h  ]
+    print(f'{x1}  {x2}  {x1+w}  {y1+h}')
+    # Initialiser le masque
+    mask = np.zeros(roi.shape[:2],np.uint8)  # les deux premiers : x et y et ignore le canal de couleur ( = 640,380,3 par exemple)
+    mask[:] = cv2.GC_PR_FGD
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+    #deplacer les fonctionsopencv sur le gpu. ne fonctionne que si opencv est compilé avec l'option cuda
+    #cv2.cuda.setDevice(0)
+    # Appliquer GrabCut
+    cv2.grabCut(roi, mask, rect, bgd_model, fgd_model, iter, cv2.GC_INIT_WITH_RECT)
+    # cv2.rectangle(image, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)  # Rectangle vert
+    mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    # Créer un masque binaire (0 pour l'arrière-plan, 1 pour le premier plan)
+    mask_binary = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    # Appliquer le masque à la ROI
+    roi_segmented = roi * mask_binary[:, :, np.newaxis]
+    # Réintégrer la ROI segmentée dans l'image originale
+    image[x1:x1 + w ,y1:y1 + h ] = roi_segmented
+
+    #pas utilie
+    #kernel = np.ones((3, 3), np.uint8)
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)  # Élimine les petits objets
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Ferme les petits trous
+    # Trouver les contours
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # meilleur compromis
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        #retourne les coordonnées du vecteur 'direction de l'allongement'
+        x,y,z,w = getVecteurDirection(image, commun.seuilsRougeH, largest_contour)
+        cv2.drawContours(image, largest_contour, -1, (0, 255, 0), 2)
+        cv2.line(image, (x, y), (z, w), (255, 0, 0), 2)
+
+##############################################
 #dessine les contours des boundingbox de objetst trouvés
 #delta1 >0 reduit le rectangle
 #deltab >0 augmente le rectangle
-def getcontour(box , image , iter=5 , delta=0):
+def afficheContourDirection(box , image , iter=5 , delta=0):
     #print('confiance: {}'.format(box.conf))
     x1, y1, x2, y2 = map(int, box.xyxy[0])
     rect = (max(0, x1 - delta), max(0, y1 - delta), x2 - x1 + delta, y2 - y1 + delta)
     # cv2.rectangle(image, rect, (0, 255, 0), 2)  # Rectangle vert
-
     # Initialiser le masque
     mask = np.zeros(image.shape[:2],np.uint8)  # les deux premiers : x et y et ignore le canal de couleur ( = 640,380,3 par exemple)
     bgd_model = np.zeros((1, 65), np.float64)
@@ -75,15 +138,14 @@ def getcontour(box , image , iter=5 , delta=0):
         largest_contour = max(contours, key=cv2.contourArea)
         #retourne les coordonnées du vecteur 'direction de l'allongement'
         x,y,z,w = getVecteurDirection(image, commun.seuilsRougeH, largest_contour)
-        cv2.drawContours(image, largest_contour, -1, (0, 255, 0), 2)
+        #cv2.drawContours(image, largest_contour, -1, (0, 255, 0), 2)
         cv2.line(image, (x, y), (z, w), (255, 0, 0), 2)
 
 
     #model = YOLO("yolov8n.pt")
 
 # Détecter des objets sur une nouvelle image
-from ultralytics import YOLO
-import cv2
+
 
 #recherche de cuda pour activer le gpu1 ou 00878
 # Vérifier si CUDA (NVIDIA) est bien disponible
@@ -137,10 +199,10 @@ while True:
         for box in result.boxes:
             #1 thread par box
             print('label:{}'.format(box.cls))
-            t = Thread(target = getcontour , args=(box,frame,2,0))
+            t = Thread(target = afficheContourDirection , args=(box,frame,2,0))
             threads.append(t)
             t.start()
-            #msk = getcontour(results , frame)
+            #msk = afficheContourDirection(results , frame)
             #dessinerPointCentre(results , frame)                       #ok mais box rectangulaire
             #getcontour(box , frame , iter=2 , delta=0 )                #contour incorrect et prend trop de temps
             #retourne le tableau de centre de gravité

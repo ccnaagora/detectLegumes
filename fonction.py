@@ -71,32 +71,6 @@ def detect(results , image , seuils):
 '''
     return result
 # Afficher le résultat
-def getVecteurDirection(image , seuils , contour):
-    # 3. Calculer le centroïde
-    M = cv2.moments(contour)
-    #print(M)
-    if M["m00"] != 0:
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        # 4. Préparer les points du contour pour PCACompute
-        points = contour[:, 0, :]  # Récupérer les points (format initial : int)
-        points = points.astype(np.float32)  # Convertir en float32
-        # 5. Calculer la PCA
-        mean, eigenvectors = cv2.PCACompute(points, mean=None)
-        # 6. Calculer l'angle d'orientation
-        angle = np.arctan2(eigenvectors[0, 1], eigenvectors[0, 0])  # Angle en radians
-        angle_deg = np.degrees(angle)  # Convertir en degrés
-        # 7. Dessiner l'axe principal
-        axis_length = 50
-        x2 = int(cX + axis_length * eigenvectors[0, 0])
-        y2 = int(cY + axis_length * eigenvectors[0, 1])
-        # Dessiner le contour, le centroïde et l'axe
-        #cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
-        #cv2.circle(image, (cX, cY), 5, (0, 0, 255), -1)  # Centroïde en rouge
-        #cv2.line(image, (cX, cY), (x2, y2), (255, 0, 0), 2)  # Axe principal en bleu
-        return (cX,cY,x2,y2)
-        # Afficher l'angle
-        #print(f"Angle d'orientation : {angle_deg:.2f} degrés")
 
 
 #return les infos des box : confiance xyxy classe
